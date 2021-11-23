@@ -31,24 +31,29 @@ namespace uhd {
 
 usrp_sink::sptr usrp_sink::make(const ::uhd::device_addr_t& device_addr,
                                 const ::uhd::stream_args_t& stream_args,
-                                const std::string& length_tag_name)
+                                const std::string& length_tag_name,
+                                const std::string& token_tag_name)
 {
     check_abi();
     return usrp_sink::sptr(new usrp_sink_impl(
-        device_addr, stream_args_ensure(stream_args), length_tag_name));
+        device_addr, stream_args_ensure(stream_args), length_tag_name, token_tag_name));
 }
 
 usrp_sink_impl::usrp_sink_impl(const ::uhd::device_addr_t& device_addr,
                                const ::uhd::stream_args_t& stream_args,
-                               const std::string& length_tag_name)
+                               const std::string& length_tag_name,
+                               const std::string& token_tag_name)
     : usrp_block("usrp_sink", args_to_io_sig(stream_args), io_signature::make(0, 0, 0)),
       usrp_block_impl(device_addr, stream_args, length_tag_name),
       _length_tag_key(length_tag_name.empty() ? pmt::PMT_NIL
                                               : pmt::string_to_symbol(length_tag_name)),
+      _token_tag_key(token_tag_name.empty() ? pmt::PMT_NIL
+                                              : pmt::string_to_symbol(token_tag_name)),
       _nitems_to_send(0),
       _async_event_loop_running(true)
 {
     message_port_register_out(ASYNC_MSGS_PORT_KEY);
+    message_port_register_out(TOKENS_OUT_PORT_KEY);
     _async_event_thread = gr::thread::thread([this]() { this->async_event_loop(); });
     _sample_rate = get_samp_rate();
 }
@@ -560,6 +565,17 @@ void usrp_sink_impl::tag_work(int& ninput_items)
             max_count = my_tag_count + 1;
             _metadata.end_of_burst = pmt::to_bool(value);
         }
+
+
+        /* IV. Tags that can be anywhere
+        *
+        * This includes token_tag_name param
+        */
+        else if (not pmt::is_null(_token_tag_key) && pmt::equal(key, _token_tag_key)) {
+            pmt::pmt_t msg = pmt::cons(_token_tag_key, pmt::PMT_NIL);
+            message_port_pub(TOKENS_OUT_PORT_KEY, msg);
+        }
+
     } // end foreach
 
     if (not pmt::is_null(_length_tag_key) &&

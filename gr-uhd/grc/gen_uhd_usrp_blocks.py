@@ -127,6 +127,10 @@ outputs:
 -   domain: message
     id: async_msgs
     optional: true
+-   domain: message
+    id: tokens_out
+    optional: true
+    hide: ${'$'}{ False if len(str(token_tag_name)) else True}
 % endif
 
 templates:
@@ -153,6 +157,9 @@ templates:
             % if sourk == 'sink':
             ${'%'} if len_tag_name:
             ${'$'}{len_tag_name},
+            ${'%'} endif
+            ${'%'} if token_tag_name:
+            ${'$'}{token_tag_name},
             ${'%'} endif
             % endif
         )
@@ -425,6 +432,15 @@ ${'$'}{len_tag_name},
 ${'%'} endif
 """
 
+TOKENTAG_PARAM = """
+-   id: token_tag_name
+    label: Token tag name
+    dtype: string
+    default: '""'
+    hide: ${ 'none' if len(str(token_tag_name)) else 'part'}
+"""
+
+
 def parse_tmpl(_tmpl, **kwargs):
     """ Render _tmpl using the kwargs. """
     from mako.template import Template
@@ -450,7 +466,7 @@ if __name__ == '__main__':
         ])
         params += SHOW_LO_CONTROLS_PARAM
         if sourk == 'sink':
-            params += TSBTAG_PARAM
+            params += TSBTAG_PARAM + TOKENTAG_PARAM
             lentag_arg = TSBTAG_ARG
         else:
             lentag_arg = ''

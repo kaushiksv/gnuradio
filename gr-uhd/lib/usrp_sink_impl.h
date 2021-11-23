@@ -44,6 +44,7 @@ static const pmt::pmt_t SEQ_ERROR_IN_BURST_KEY =
     pmt::string_to_symbol("seq_error_in_burst");
 static const pmt::pmt_t TIME_ERROR_KEY = pmt::string_to_symbol("time_error");
 static const pmt::pmt_t ASYNC_MSGS_PORT_KEY = pmt::string_to_symbol("async_msgs");
+static const pmt::pmt_t TOKENS_OUT_PORT_KEY = pmt::string_to_symbol("tokens_out");
 
 
 namespace gr {
@@ -64,7 +65,8 @@ class usrp_sink_impl : public usrp_sink, public usrp_block_impl
 public:
     usrp_sink_impl(const ::uhd::device_addr_t& device_addr,
                    const ::uhd::stream_args_t& stream_args,
-                   const std::string& length_tag_name);
+                   const std::string& length_tag_name,
+                   const std::string& token_tag_name);
     ~usrp_sink_impl();
 
     ::uhd::dict<std::string, std::string> get_usrp_info(size_t chan);
@@ -137,6 +139,7 @@ private:
     // stream tags related stuff
     std::vector<tag_t> _tags;
     const pmt::pmt_t _length_tag_key;
+    const pmt::pmt_t _token_tag_key;
     long _nitems_to_send;
 
     // asynchronous messages related stuff

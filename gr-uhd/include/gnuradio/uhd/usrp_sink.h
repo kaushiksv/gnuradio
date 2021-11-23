@@ -111,7 +111,8 @@ public:
      */
     static sptr make(const ::uhd::device_addr_t& device_addr,
                      const ::uhd::stream_args_t& stream_args,
-                     const std::string& tsb_tag_name = "");
+                     const std::string& tsb_tag_name = "",
+                     const std::string& token_tag_name = "");
 
     /*!
      * Set the start time for outgoing samples.
